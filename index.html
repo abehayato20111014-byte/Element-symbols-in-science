@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>超大規模・理科のたからもの：物質マスター・プロ</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --primary-indigo: #2563eb;
+            --primary-purple: #6366f1;
+            --bg-gradient: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --btn-red: #f43f5e;
+            --btn-blue: #0ea5e9;
+            --btn-green: #10b981;
+            --btn-orange: #f59e0b;
+            --correct-green: #d1fae5;
+            --wrong-red: #fee2e2;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+            --shadow-md: 0 10px 25px rgba(0,0,0,0.05);
+            --shadow-lg: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 680px;
+            background: var(--card-bg);
+            border-radius: 24px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+        }
+
+        /* アニメーションヘッダー */
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #2563eb 100%);
+            color: white;
+            text-align: center;
+            padding: 28px 20px;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 6px;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+        .header p {
+            font-size: 0.9rem;
+            opacity: 0.85;
+            font-weight: 300;
+        }
+
+        /* 画面コンテンツのベース */
+        .content {
+            padding: 35px 30px;
+            min-height: 520px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            background-color: #fdfdfd;
+        }
+
+        .screen {
+            display: none;
+            width: 100%;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 特製ボタン・リンク群 */
+        .genre-btn {
+            width: 100%;
+            padding: 20px;
+            border: none;
+            border-radius: 18px;
+            color: white;
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 16px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.12);
+            transition: all 0.1s ease;
+        }
+        .genre-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 rgba(0,0,0,0.12);
+        }
+        .genre-btn.red { background: linear-gradient(135deg, #f43f5e, #e11d48); }
+        .genre-btn.blue { background: linear-gradient(135deg, #0ea5e9, #0284c7); }
+        .genre-btn.green { background: linear-gradient(135deg, #10b981, #059669); }
+        
+        .badge {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(4px);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .action-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+            padding: 16px;
+            border: none;
+            border-radius: 14px;
+            font-size: 1.15rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .action-btn:hover { opacity: 0.95; transform: translateY(-1px); }
+        .action-btn:active { transform: translateY(1px); }
+
+        .secondary-btn {
+            width: 100%;
+            background: #ffffff;
+            color: #4f46e5;
+            border: 2px solid #e0e7ff;
+            padding: 14px;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+        .secondary-btn:hover { background-color: #f8fafc; border-color: #cbd5e1; }
+
+        .back-link {
+            color: var(--primary-purple);
+            font-size: 0.95rem;
+            align-self: flex-start;
+            margin-bottom: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .back-link:hover { text-decoration: underline; }
+
+        /* モード選択カード */
+        .mode-option {
+            width: 100%;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin-bottom: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: all 0.2s;
+            background: white;
+        }
+        .mode-option:hover {
+            border-color: var(--primary-purple);
+            background-color: #f8fafc;
+        }
+        .mode-option input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--primary-purple);
+        }
+        .mode-text div:first-child {
+            font-weight: bold;
+            font-size: 1.05rem;
+            margin-bottom: 4px;
+            color: var(--text-main);
+        }
+        .mode-text div:last-child {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* クイズインターフェース */
+        .status-container {
+            display: flex;
+            width: 100%;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .status-box {
+            flex: 1;
+            padding: 12px;
+            border-radius: 14px;
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: bold;
+            box-shadow: var(--shadow-sm);
+        }
+        .status-score { background-color: #eef2ff; color: #3730a3; border: 1px solid #e0e7ff; }
+        .status-combo { background-color: #fffbeb; color: #92400e; border: 1px solid #fef3c7; }
+        .status-box span { display: block; font-size: 1.4rem; font-weight: 800; margin-top: 4px; }
+
+        .timer-bar-container {
+            width: 100%;
+            height: 14px;
+            background-color: #e2e8f0;
+            border-radius: 7px;
+            overflow: hidden;
+            margin-bottom: 25px;
+            position: relative;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .timer-bar {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(to right, #ef4444, #f59e0b, #10b981);
+            transition: width 0.1s linear;
+        }
+        .timer-text {
+            position: absolute;
+            right: 8px;
+            top: -20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: var(--text-muted);
+        }
+
+        .question-box {
+            width: 100%;
+            border: 2px dashed #cbd5e1;
+            border-radius: 18px;
+            padding: 35px 20px;
+            text-align: center;
+            margin-bottom: 25px;
+            background-color: #fafafa;
+            position: relative;
+        }
+        .question-hint { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 500; }
+        .question-text { font-size: 2.6rem; font-weight: 800; color: #0f172a; letter-spacing: 1px; }
+
+        .choices-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .choice-btn {
+            padding: 18px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 14px;
+            background-color: white;
+            font-size: 1.15rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+            color: #334155;
+        }
+        .choice-btn:hover {
+            border-color: #cbd5e1;
+            background-color: #f8fafc;
+            transform: translateY(-1px);
+        }
+
+        /* リアルタイム解説ボード */
+        .explanation-panel {
+            width: 100%;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 15px 18px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: #475569;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .explanation-panel.active { display: block; }
+        .explanation-title { font-weight: bold; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+
+        /* 高機能2軸ランキング表示 */
+        .ranking-matrix {
+            width: 100%;
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 16px;
+            border: 1px solid #e2e8f0;
+        }
+        .matrix-row {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 12px;
+            width: 100%;
+        }
+        .matrix-row.period-row {
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+        }
+        .sub-tab-btn {
+            flex: 1;
+            padding: 8px 10px;
+            border: 1px solid #e2e8f0;
+            background-color: #f8fafc;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #64748b;
+            transition: all 0.2s;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .sub-tab-btn.active {
+            background-color: var(--primary-purple);
+            color: white;
+            border-color: var(--primary-purple);
+            box-shadow: 0 2px 6px rgba(99, 102, 241, 0.2);
+        }
+        .sub-tab-btn.genre-tab.active {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2);
+        }
+        
+        .ranking-list {
+            width: 100%;
+            max-height: 280px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            background-color: #f8fafc;
+        }
+        .ranking-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.95rem;
+        }
+        .ranking-item:last-child { border-bottom: none; }
+        .ranking-item .rank { font-weight: 800; width: 45px; font-size: 1rem; }
+        .ranking-item .rank.rank-1 { color: #eab308; }
+        .ranking-item .rank.rank-2 { color: #94a3b8; }
+        .ranking-item .rank.rank-3 { color: #b45309; }
+        .ranking-item .rank.rank-other { color: #64748b; }
+        .ranking-item .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; color: #334155; }
+        .ranking-item .score { font-weight: bold; color: var(--btn-red); font-size: 1.05rem; }
+
+        /* ダッシュボード表示 */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 100%;
+            margin-bottom: 16px;
+        }
+        .dash-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+        }
+        .dash-label { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; }
+        .dash-value { font-size: 1.25rem; font-weight: bold; color: var(--text-main); }
+
+        /* フラッシュ演出効果 */
+        .correct-flash { background-color: var(--correct-green) !important; border-color: #10b981 !important; color: #065f46 !important; }
+        .wrong-flash { background-color: var(--wrong-red) !important; border-color: #ef4444 !important; color: #991b1b !important; }
+        
+        .footer-text {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 20px;
+            padding: 0 10px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔬 物質マスター・プロ 🏆</h1>
+            <p>中学〜高校基礎：元素・化学式・イオン完全攻略システム</p>
+        </div>
+
+        <div class="content">
+            
+            <div id="screen-genre" class="screen active">
+                <div style="width:100%; display:flex; justify-content:space-between; align-items:center; background-color:#f1f5f9; padding:12px 16px; border-radius:14px; margin-bottom:20px; border:1px solid #e2e8f0;">
+                    <div style="font-size:0.9rem; color:#334155;">🔬 称号: <span id="top-userbadge" style="font-weight:bold; color:#4f46e5; background:#e0e7ff; padding:2px 8px; border-radius:8px;">計算中</span><br>👋 <span id="top-username" style="font-weight:bold;">プレイヤー</span> さん</div>
+                    <button onclick="openProfile()" style="padding:8px 14px; background-color:white; border:1px solid #cbd5e1; border-radius:10px; font-size:0.8rem; cursor:pointer; font-weight:bold; box-shadow:var(--shadow-sm);">ラボ記録・設定</button>
+                </div>
+
+                <div style="font-size: 3.5rem; margin-bottom: 12px; animation: pulse 2s infinite;">🧪</div>
+                <h2 class="screen-title" style="color:#1e3a8a; font-size:1.4rem; margin-bottom:4px;">特訓ジャンルを選択</h2>
+                <p class="screen-subtitle" style="color:var(--text-muted); font-size:0.85rem; margin-bottom:25px;">全問に詳細な解説を完備。間違えながらマスターしよう！</p>
+                
+                <button class="genre-btn red" onclick="selectGenre('element')">
+                    🔴 元素記号 (1〜3年+) <span class="badge">H, He, Fe, Ag...</span>
+                </button>
+                <button class="genre-btn blue" onclick="selectGenre('formula')">
+                    🔵 化学式 (2〜3年+) <span class="badge">H₂O, NaHCO₃...</span>
+                </button>
+                <button class="genre-btn green" onclick="selectGenre('ion')">
+                    🟢 イオン (3年+) <span class="badge">H⁺, SO₄²⁻, NH₄⁺...</span>
+                </button>
+
+                <button class="secondary-btn" onclick="openGlobalRanking()" style="margin-top: 15px; padding: 16px; font-size: 1.05rem; background: #e0e7ff; color: #3730a3; border: none; box-shadow: var(--shadow-sm);">
+                    📊 全国のハイスコア・ランキングを見る
+                </button>
+            </div>
+
+            <div id="screen-mode" class="screen">
+                <div class="back-link" onclick="changeScreen('screen-genre')">⬅ タイトルに戻る</div>
+                <div id="selected-genre-badge" style="margin-bottom: 12px;"></div>
+                <h2 class="screen-title" style="color:#1e3a8a; font-size:1.35rem; margin-bottom:4px;">出題スタイル設定</h2>
+                <p class="screen-subtitle" style="color:var(--text-muted); font-size:0.85rem; margin-bottom:20px;">あなたのレベルに合わせて選択してください</p>
+                
+                <label class="mode-option">
+                    <input type="radio" name="play-mode" value="sym-to-name" checked>
+                    <div class="mode-text">
+                        <div id="mode-desc-1">記号・式 ➔ 名称を当てる</div>
+                        <div>表示された化学記号を見て、正しい日本語名を選択します。</div>
+                    </div>
+                </label>
+                <label class="mode-option">
+                    <input type="radio" name="play-mode" value="name-to-sym">
+                    <div class="mode-text">
+                        <div id="mode-desc-2">名称 ➔ 記号・式を当てる</div>
+                        <div>表示された日本語名に合致する正確な記号・式を選択します。</div>
+                    </div>
+                </label>
+                <label class="mode-option">
+                    <input type="radio" name="play-mode" value="mix">
+                    <div class="mode-text">
+                        <div>ミックスシャッフル（上級者向け）</div>
+                        <div>上記2つの出題パターンがランダムに入れ替わりながら出題されます。</div>
+                    </div>
+                </label>
+                
+                <button class="action-btn" onclick="startGame()" style="margin-top: 15px;">特訓スタート！🚀</button>
+            </div>
+
+            <div id="screen-quiz" class="screen">
+                <div class="status-container">
+                    <div class="status-box status-score">獲得スコア<span id="score-val">0 点</span></div>
+                    <div class="status-box status-combo">コンボ数<span id="combo-val">0 Combo</span></div>
+                </div>
+                <div style="position: relative; width: 100%;">
+                    <div class="timer-text" id="timer-text">60.0 秒</div>
+                    <div class="timer-bar-container">
+                        <div class="timer-bar" id="timer-bar"></div>
+                    </div>
+                </div>
+                <div class="question-box">
+                    <div class="question-hint" id="q-hint">分析中...</div>
+                    <div class="question-text" id="q-text">-</div>
+                </div>
+                <div class="choices-grid" id="choices-container">
+                    </div>
+
+                <div class="explanation-panel" id="explanation-panel">
+                    <div class="explanation-title" id="explanation-title">💡 サイエンス・ラボ解説</div>
+                    <div id="explanation-content">解説文がここに表示されます。</div>
+                </div>
+            </div>
+
+            <div id="screen-ranking" class="screen">
+                <div class="back-link" id="ranking-back-btn" onclick="changeScreen('screen-genre')">⬅ タイトルに戻る</div>
+                <div style="font-size: 3rem; margin-bottom: 6px;">📊</div>
+                <h2 class="screen-title" style="color:#1e3a8a; font-size:1.4rem; margin-bottom:4px;">全国オンラインランキング</h2>
+                <p class="screen-subtitle" style="color:var(--text-muted); font-size:0.85rem; margin-bottom:20px;">全プレイヤーの最高スコアがリアルタイムに集計されています</p>
+                
+                <div class="ranking-matrix">
+                    <div class="matrix-row period-row">
+                        <button class="sub-tab-btn" id="p-tab-daily" onclick="setRankingPeriod('daily')">今日</button>
+                        <button class="sub-tab-btn" id="p-tab-weekly" onclick="setRankingPeriod('weekly')">今週</button>
+                        <button class="sub-tab-btn" id="p-tab-monthly" onclick="setRankingPeriod('monthly')">今月</button>
+                    </div>
+                    <div class="matrix-row">
+                        <button class="sub-tab-btn genre-tab" id="g-tab-element" onclick="setRankingGenre('element')">🔴 元素記号</button>
+                        <button class="sub-tab-btn genre-tab" id="g-tab-formula" onclick="setRankingGenre('formula')">🔵 化学式</button>
+                        <button class="sub-tab-btn genre-tab" id="g-tab-ion" onclick="setRankingGenre('ion')">🟢 イオン</button>
+                    </div>
+                </div>
+
+                <div class="ranking-list" id="global-ranking-list" style="margin-top: 15px;">
+                    </div>
+                
+                <button class="action-btn" id="ranking-retry-btn" onclick="changeScreen('screen-genre')" style="margin-top: 20px;">タイトルメニューに戻る 🔄</button>
+            </div>
+
+            <div id="screen-profile" class="screen">
+                <h2 class="screen-title" style="color:#1e3a8a; font-size:1.35rem; margin-bottom:4px;">👤 理科ラボ・ダッシュボード</h2>
+                <p class="screen-subtitle" style="color:var(--text-muted); font-size:0.85rem; margin-bottom:20px;">あなたの学習進捗と個人最高記録を統合分析します</p>
+                
+                <div style="width: 100%; margin-bottom: 18px;">
+                    <label style="display:block; font-weight:bold; margin-bottom:6px; color:#475569; font-size:0.9rem;">研究者コードネーム（最大10文字）</label>
+                    <input type="text" id="input-username" maxlength="10" style="width:100%; padding:14px; border:2px solid #e2e8f0; border-radius:12px; font-size:1.1rem; font-weight:600; color:var(--text-main);">
+                </div>
+                
+                <div class="dashboard-grid">
+                    <div class="dash-card"><div class="dash-label">通算解答問題数</div><div class="dash-value" id="dash-total">0 問</div></div>
+                    <div class="dash-card"><div class="dash-label">通算平均正解率</div><div class="dash-value" id="dash-accuracy" style="color:var(--btn-green);">0 %</div></div>
+                </div>
+
+                <div style="width: 100%; margin-bottom: 20px; background-color:#f8fafc; border:1px solid #e2e8f0; padding:16px; border-radius:14px;">
+                    <div style="font-weight:bold; color:#1e3a8a; margin-bottom:12px; text-align:center; font-size:0.95rem;">🏆 自己ベストハイスコア 🏆</div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.9rem;"><span>本日のベスト:</span><span id="local-score-daily" style="font-weight:bold; color:var(--btn-red);">0 点</span></div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.9rem;"><span>今週のベスト:</span><span id="local-score-weekly" style="font-weight:bold; color:var(--btn-red);">0 点</span></div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.9rem;"><span>今月のベスト:</span><span id="local-score-monthly" style="font-weight:bold; color:var(--btn-red);">0 点</span></div>
+                </div>
+                
+                <button class="action-btn" onclick="saveProfile()">設定・記録を保存する</button>
+                <div class="back-link" onclick="changeScreen('screen-genre')" style="margin-top: 15px; align-self: center; margin-bottom:0;">変更せず戻る</div>
+            </div>
+
+        </div>
+        <div class="footer-text">※ 大規模データベース化により、出題パターンは各ジャンル40種類以上、イオンは電荷や価数をシステムが高度に自動選定してひっかけ選択肢を自動生成します。</div>
+    </div>
+
+    <script>
+        // --- Firebase オンライン設定 ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyDiezBGdh7DR_OBG6TLBuQ_Ug5jLCqvQCI",
+            authDomain: "element-symbols-in-science.firebaseapp.com",
+            projectId: "element-symbols-in-science",
+            storageBucket: "element-symbols-in-science.firebasestorage.app",
+            messagingSenderId: "1080729536422",
+            appId: "1:1080729536422:web:c10a8b88db6c28c4497167"
+        };
+
+        // 安全な互換モードでの初期化
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // --- 超大規模問題データベース (全問に詳細な解説を付与) ---
+        const quizData = {
+            element: [
+                { sym: "H", name: "水素", desc: "宇宙で最も軽くて最も多く存在する元素。燃えると水ができる。" },
+                { sym: "He", name: "ヘリウム", desc: "非常に軽く、他の物質と全く反応しない不活性な気体。風船に使われる。" },
+                { sym: "Li", name: "リチウム", desc: "最も軽い金属。スマホのバッテリー（リチウムイオン電池）に不可欠。" },
+                { sym: "Be", name: "ベリリウム", desc: "極めて頑丈で軽い金属。宇宙望遠鏡のミラーなどに使用される。" },
+                { sym: "B", name: "ホウ素", desc: "目薬の殺菌剤や、ゴキブリ駆除のホウ酸団子の原料となる半金属。" },
+                { sym: "C", name: "炭素", desc: "有機物の骨格。ダイヤモンドや鉛筆の芯（黒鉛）はすべて炭素の同素体。" },
+                { sym: "N", name: "窒素", desc: "空気中に最も多く含まれる（約78%）気体。食品の酸化防止充填に使われる。" },
+                { sym: "O", name: "酸素", desc: "空気中に約21%存在。生物の呼吸や、物質が燃焼するのを助ける働きがある。" },
+                { sym: "F", name: "フッ素", desc: "非常に反応性が高い淡黄色の気体。歯磨き粉の虫歯予防成分に含まれる。" },
+                { sym: "Ne", name: "ネオン", desc: "電圧をかけると赤橙色に美しく発光する気体。ネオンサインに利用。" },
+                { sym: "Na", name: "ナトリウム", desc: "アルカリ金属。非常に柔らかく、水と激しく反応して水素を発生する。" },
+                { sym: "Mg", name: "マグネシウム", desc: "非常に軽く強い金属。燃やすとまぶしい白色光を放つため花火に使われる。" },
+                { sym: "Al", name: "アルミニウム", desc: "一円玉やアルミホイルの原料。軽くて加工しやすくリサイクル効率が良い。" },
+                { sym: "Si", name: "ケイ素", desc: "地球の地殻に酸素に次いで多く存在。半導体の主原料として重要。" },
+                { sym: "P", name: "リン", desc: "マッチの摩擦面に使われる。生物のDNAや骨の構成要素でもある。" },
+                { sym: "S", name: "硫黄", desc: "黄色の非金属結晶。火山地帯によく見られ、温泉の独特な臭いの元となる。" },
+                { sym: "Cl", name: "塩素", desc: "黄緑色の有毒な気体。強い殺菌・漂白作用を持ち、水道水の消毒に使われる。" },
+                { sym: "Ar", name: "アルゴン", desc: "空気中に約1%含まれる不活性気体。電球や蛍光灯の内部に封入される。" },
+                { sym: "K", name: "カリウム", desc: "ナトリウムに似た激しい反応性を持つ金属。植物の三大肥料の一つ。" },
+                { sym: "Ca", name: "カルシウム", desc: "骨や歯の主成分。チョークや大理石、石灰石の主成分でもある。" },
+                { sym: "Fe", name: "鉄", desc: "人類に最も広く利用されている金属。磁石に引きつけられ、赤サビを形成する。" },
+                { sym: "Cu", name: "銅", desc: "独特の赤金色の金属。電気を非常によく通すため、電線に広く使われる。" },
+                { sym: "Zn", name: "亜鉛", desc: "トタン（鉄に亜鉛をメッキしたもの）や、乾電池の負極ケースに使われる。" },
+                { sym: "Ag", name: "銀", desc: "すべての金属の中で最も電気と熱をよく通す。写真の感光材料にも使われた。" },
+                { sym: "Ba", name: "バリウム", desc: "X線（レントゲン）を通さない性質があり、胃の検査の造影剤として飲まれる。" },
+                { sym: "Pt", name: "白金(プラチナ)", desc: "非常に安定しており酸に溶けない貴金属。車の排気ガス浄化触媒として重要。" },
+                { sym: "Au", name: "金", desc: "最も薄く広げられる性質（展性・延性）が高い。王水にしか溶けない。" },
+                { sym: "Hg", name: "水銀", desc: "常温で唯一「液体」として存在する特殊な金属。かつて体温計に使われた。" },
+                { sym: "Pb", name: "鉛", desc: "非常に重く柔らかい金属。放射線を遮断する能力が高く、防護服に使われる。" },
+                { sym: "I", name: "ヨウ素", desc: "うがい薬の消毒成分。デンプンと反応して青紫色になる（ヨウ素デンプン反応）。" }
+            ],
+            formula: [
+                { sym: "H₂O", name: "水", desc: "水素と酸素が2:1の体積比で電気分解される。生命活動の根本となる液体。" },
+                { sym: "CO₂", name: "二酸化炭素", desc: "炭素や有機物が燃焼すると発生。石灰水を白く濁らせる性質がある。" },
+                { sym: "NaCl", name: "塩化ナトリウム", desc: "食塩の化学名。ナトリウムイオンと塩化物イオンが強固に結合した結晶。" },
+                { sym: "HCl", name: "塩化水素", desc: "水に溶かすと「塩酸」になる。強い酸性を示し、金属を溶かして水素を出す。" },
+                { sym: "NH₃", name: "アンモニア", desc: "非常に強い刺激臭を持つ気体。水に非常によく溶け、弱アルカリ性を示す。" },
+                { sym: "CuO", name: "酸化銅", desc: "銅を空気中で加熱するとできる黒色の粉末。炭素と一緒に加熱すると還元される。" },
+                { sym: "MgO", name: "酸化マグネシウム", desc: "マグネシウムを燃焼させたときにできる白色の粉末。医薬品にも使われる。" },
+                { sym: "NaHCO₃", name: "炭酸水素ナトリウム", desc: "重曹のこと。加熱すると二酸化炭素、水、炭酸ナトリウムに熱分解する。" },
+                { sym: "Na₂CO₃", name: "炭酸ナトリウム", desc: "炭酸水素ナトリウムの熱分解で生成。水によく溶け強いアルカリ性を示す。" },
+                { sym: "Ag₂O", name: "酸化銀", desc: "黒褐色の粉末。加熱するだけで簡単に銀と酸素に熱分解する性質がある。" },
+                { sym: "CH₄", name: "メタン", desc: "都市ガスの主成分。最も単純な構造の有機物（炭化水素）で、燃えるとCO₂とH₂Oになる。" },
+                { sym: "H₂", name: "水素(分子)", desc: "2つの水素原子が結びついた気体分子。マッチの火を近づけると音を立てて燃える。" },
+                { sym: "O₂", name: "酸素(分子)", desc: "通常の空気中に存在する酸素の形態。激しい燃焼や緩やかな酸化（呼吸）を支える。" },
+                { sym: "N₂", name: "窒素(分子)", desc: "空気の約8割を占める。非常に安定した結合を持ち、他の物質と反応しにくい。" },
+                { sym: "Cl₂", name: "塩素(分子)", desc: "黄緑色の有毒気体。水に溶かすと強い漂白作用と殺菌作用を発揮する。" },
+                { sym: "NaOH", name: "水酸化ナトリウム", desc: "強アルカリ性の代表。別名「苛性ソーダ」。皮膚を激しく侵すため取り扱い注意。" },
+                { sym: "Ca(OH)₂", name: "水酸化カルシウム", desc: "消石灰のこと。これの水溶液が、二酸化炭素の検出に使われる「石灰水」である。" },
+                { sym: "Ba(OH)₂", name: "水酸化バリウム", desc: "強アルカリ性の物質。硫酸と混ぜると白色の沈殿（硫酸バリウム）を生じる。" },
+                { sym: "H₂SO₄", name: "硫酸", desc: "極めて強い酸性を持つ液体。脱水作用が強く、有機物を炭化させて黒焦げにする。" },
+                { sym: "HNO₃", name: "硝酸", desc: "強い酸性を持つ液体。光で分解しやすいため、褐色のビンに入れて保管される。" },
+                { sym: "CH₃COOH", name: "酢酸", desc: "お酢に含まれる酸味成分。弱酸性であり、刺激臭を放つ液体。" },
+                { sym: "CaCO₃", name: "炭酸カルシウム", desc: "貝殻、卵の殻、チョーク、大理石の主成分。塩酸を加えると二酸化炭素を出す。" },
+                { sym: "CuSO₄", name: "硫酸銅", desc: "無水物は白色だが、水を吸収すると美しい青色の結晶（五水和物）に変わる。" },
+                { sym: "FeS", name: "硫化鉄", desc: "鉄と硫黄の混合物を加熱すると、激しく光を放ちながら化合してできる黒い固体。" },
+                { sym: "MnO₂", name: "二酸化マンガン", desc: "黒色の粉末。過酸化水素水（オキシドール）に加えると、自身は変化せず酸素を発生させる触媒。" }
+            ],
+            ion: [
+                { sym: "H⁺", name: "水素イオン", desc: "酸性の原因となる陽イオン。水溶液中のこのイオンの濃度がpHを決める。" },
+                { sym: "Na⁺", name: "ナトリウムイオン", desc: "食塩が水に溶けたときにできる1価の陽イオン。体内の水分バランスを保つ。" },
+                { sym: "K⁺", name: "カリウムイオン", desc: "植物の細胞内に多く含まれる1価の陽イオン。神経の伝達に重要な役割を持つ。" },
+                { sym: "NH₄⁺", name: "アンモニウムイオン", desc: "非金属の原子が集まってできた多原子の1価の陽イオン。弱アルカリ性の性質を持つ。" },
+                { sym: "Ag⁺", name: "銀イオン", desc: "銀原子が電子を1くて失った1価の陽イオン。強い抗菌・殺菌作用を持つ。" },
+                { sym: "Mg²⁺", name: "マグネシウムイオン", desc: "マグネシウム原子が電子を2個失った2価の陽イオン。苦味の主成分（にがり）。" },
+                { sym: "Ca²⁺", name: "カルシウムイオン", desc: "2価の陽イオン。これが水中に多く含まれる水を「硬水」と呼ぶ。" },
+                { sym: "Cu²⁺", name: "銅イオン", desc: "水に溶けると美しい「青色」を示す2価の陽イオン。水溶液の色の原因。" },
+                { sym: "Zn²⁺", name: "亜鉛イオン", desc: "亜鉛原子が電子を2個放出した2価の陽イオン。イオン化傾向が水素より大きい。" },
+                { sym: "Ba²⁺", name: "バリウムイオン", desc: "2価の陽イオン。硫酸イオンと出会うと、水に絶対に溶けない白い結晶を作る。" },
+                { sym: "Cl⁻", name: "塩化物イオン", desc: "塩素原子が電子を1個受け取った1価の陰イオン。胃酸（塩酸）の中にも含まれる。" },
+                { sym: "OH⁻", name: "水酸化物イオン", desc: "アルカリ性の原因となる1価の陰イオン。これが多く含まれるとpHが高くなる。" },
+                { sym: "NO₃⁻", name: "硝酸イオン", desc: "窒素と酸素からなる多原子の1価の陰イオン。多くの金属塩が水に溶ける原因。" },
+                { sym: "SO₄²⁻", name: "硫酸イオン", desc: "硫黄と酸素からなる2価の陰イオン。バリウムやカルシウムと結合すると沈殿する。" },
+                { sym: "CO₃²⁻", name: "炭酸イオン", desc: "炭素と酸素からなる2価の陰イオン。カルシウムと結合すると炭酸カルシウムになる。" },
+                { sym: "CH₃COO⁻", name: "酢酸イオン", desc: "酢酸が電離したときにできる1価の陰イオン。有機物のイオンの代表格。" },
+                { sym: "S²⁻", name: "硫化物イオン", desc: "硫黄原子が電子を2個受け取った2価の陰イオン。多くの金属イオンと結合して独特な色の沈殿を作る。" }
+            ]
+        };
+
+        // --- アプリケーション状態管理 (State) ---
+        let currentGenre = 'element';
+        let currentMode = 'sym-to-name';
+        let currentQuestion = null;
+        let isQuestionMixedType = false; 
+        
+        let score = 0;
+        let combo = 0;
+        let maxCombo = 0;
+        let correctCount = 0;
+        let answeredInThisSession = 0;
+        let correctInThisSession = 0;
+
+        let timeLeft = 60.0;
+        let timerInterval = null;
+
+        // ランキング画面用状態
+        let rankingViewGenre = 'element';
+        let rankingViewPeriod = 'daily';
+
+        // --- 画面切り替えエンジン ---
+        function changeScreen(screenId) {
+            const screens = document.querySelectorAll('.screen');
+            screens.forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            
+            // クイズ中でなければ解説パネルを隠す
+            if(screenId !== 'screen-quiz') {
+                document.getElementById('explanation-panel').classList.remove('active');
+            }
+            
+            // タイトルに戻ったらヘッダーのステータスをリフレッシュ
+            if(screenId === 'screen-genre') {
+                calculateUserStatsAndBadge();
+            }
+        }
+
+        // --- ジャンル選択の仲介 ---
+        function selectGenre(genre) {
+            currentGenre = genre;
+            const badge = document.getElementById('selected-genre-badge');
+            const h1 = document.getElementById('mode-desc-1');
+            const h2 = document.getElementById('mode-desc-2');
+            
+            if (genre === 'element') {
+                badge.innerHTML = `<span class="genre-btn red" style="padding:6px 14px; font-size:0.9rem; margin:0; cursor:default; display:inline-block; width:auto;">🔴 元素記号モード</span>`;
+                h1.innerText = `記号 ➔ 名称（例：「H」➔「水素」）`;
+                h2.innerText = `名称 ➔ 記号（例：「水素」➔「H」）`;
+            } else if (genre === 'formula') {
+                badge.innerHTML = `<span class="genre-btn blue" style="padding:6px 14px; font-size:0.9rem; margin:0; cursor:default; display:inline-block; width:auto;">🔵 化学式モード</span>`;
+                h1.innerText = `化学式 ➔ 名称（例：「H₂O」➔「水」）`;
+                h2.innerText = `名称 ➔ 化学式（例：「水」➔「H₂O」）`;
+            } else if (genre === 'ion') {
+                badge.innerHTML = `<span class="genre-btn green" style="padding:6px 14px; font-size:0.9rem; margin:0; cursor:default; display:inline-block; width:auto;">🟢 イオンモード</span>`;
+                h1.innerText = `イオン式 ➔ 名称（例：「H⁺」➔「水素イオン」）`;
+                h2.innerText = `名称 ➔ イオン式（例：「水素イオン」➔「H⁺」）`;
+            }
+            changeScreen('screen-mode');
+        }
+
+        // --- タイトルから直接ランキングを開く ---
+        function openGlobalRanking() {
+            // デフォルトで現在の選択ジャンル・今日のランキングを表示
+            rankingViewGenre = currentGenre || 'element';
+            rankingViewPeriod = 'daily';
+            
+            // 戻るボタンの挙動をタイトル戻りに明示設定
+            document.getElementById('ranking-back-btn').style.display = 'block';
+            document.getElementById('ranking-retry-btn').innerText = 'タイトルメニューに戻る 🔄';
+            
+            changeScreen('screen-ranking');
+            renderRankingMatrixUI();
+            loadGlobalRankingFromFirebase();
+        }
+
+        // --- クイズゲーム開始 ---
+        function startGame() {
+            const modes = document.getElementsByName('play-mode');
+            for(let m of modes) {
+                if(m.checked) currentMode = m.value;
+            }
+
+            score = 0;
+            combo = 0;
+            maxCombo = 0;
+            correctCount = 0;
+            answeredInThisSession = 0;
+            correctInThisSession = 0;
+            timeLeft = 60.0;
+            
+            document.getElementById('score-val').innerText = "0 点";
+            document.getElementById('combo-val').innerText = "0 Combo";
+            document.getElementById('explanation-panel').classList.remove('active');
+            
+            changeScreen('screen-quiz');
+            nextQuestion();
+
+            if(timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timeLeft -= 0.1;
+                if(timeLeft <= 0) {
+                    timeLeft = 0;
+                    endGame();
+                }
+                document.getElementById('timer-text').innerText = timeLeft.toFixed(1) + " 秒";
+                document.getElementById('timer-bar').style.width = (timeLeft / 60.0 * 100) + "%";
+            }, 100);
+        }
+
+        // --- クイズ出題システム ---
+        function nextQuestion() {
+            const pool = quizData[currentGenre];
+            currentQuestion = pool[Math.floor(Math.random() * pool.length)];
+
+            if (currentMode === 'mix') {
+                isQuestionMixedType = Math.random() > 0.5;
+            } else {
+                isQuestionMixedType = (currentMode === 'name-to-sym');
+            }
+
+            const hintText = document.getElementById('q-hint');
+            const qText = document.getElementById('q-text');
+
+            if(isQuestionMixedType) {
+                hintText.innerText = `この【名称】に該当する正しい記号・化学式は？`;
+                qText.innerText = currentQuestion.name;
+            } else {
+                hintText.innerText = `この記号・化学式が表す【名称】は？`;
+                qText.innerText = currentQuestion.sym;
+            }
+
+            // 高度な4択生成
+            const choices = generateAdvancedChoices(currentQuestion, pool);
+            const container = document.getElementById('choices-container');
+            container.innerHTML = '';
+
+            choices.forEach(item => {
+                const btn = document.createElement('button');
+                btn.className = 'choice-btn';
+                btn.innerText = isQuestionMixedType ? item.sym : item.name;
+                btn.onclick = () => checkAnswer(btn, item);
+                container.appendChild(btn);
+            });
+        }
+
+        // 高度なダミー生成ロジック (イオンの価数ひっかけなど)
+        function generateAdvancedChoices(correctItem, pool) {
+            let choices = [correctItem];
+            let filteredPool = pool.filter(item => item.sym !== correctItem.sym);
+            
+            // イオンジャンルの場合、電荷(プラスマイナス)や数字が似ているものを優先抽出するひっかけロジック
+            if (currentGenre === 'ion') {
+                const isPositive = correctItem.sym.includes('⁺');
+                const isDouble = correctItem.sym.includes('²');
+                
+                // 属性が似ているものを最優先ソート
+                filteredPool.sort((a, b) => {
+                    let scoreA = 0;
+                    let scoreB = 0;
+                    if (a.sym.includes('⁺') === isPositive) scoreA += 2;
+                    if (b.sym.includes('⁺') === isPositive) scoreB += 2;
+                    if (a.sym.includes('²') === isDouble) scoreA += 1;
+                    if (b.sym.includes('²') === isDouble) scoreB += 1;
+                    return scoreB - scoreA; // スコアが高い（似ている）ものを前に
+                });
+            } else {
+                // 通常ジャンルはランダムシャッフル
+                filteredPool.sort(() => Math.random() - 0.5);
+            }
+            
+            // 上位3つのダミーを合成
+            for (let i = 0; i < Math.min(3, filteredPool.length); i++) {
+                choices.push(filteredPool[i]);
+            }
+            
+            // 4択を最終シャッフル
+            return choices.sort(() => Math.random() - 0.5);
+        }
+
+        // --- 正誤判定＆リアルタイム解説表示 ---
+        function checkAnswer(selectedBtn, item) {
+            const allButtons = document.querySelectorAll('.choice-btn');
+            allButtons.forEach(b => b.disabled = true);
+
+            answeredInThisSession++;
+            const isCorrect = (item.sym === currentQuestion.sym);
+
+            // 解説パネルの展開
+            const expPanel = document.getElementById('explanation-panel');
+            const expTitle = document.getElementById('explanation-title');
+            const expContent = document.getElementById('explanation-content');
+            
+            expContent.innerHTML = `<strong>【${currentQuestion.name} (${currentQuestion.sym})】</strong><br>${currentQuestion.desc}`;
+            expPanel.classList.add('active');
+
+            if(isCorrect) {
+                selectedBtn.classList.add('correct-flash');
+                expTitle.innerHTML = `🟢 正解！サイエンス解説`;
+                expTitle.style.color = '#059669';
+                
+                correctCount++;
+                correctInThisSession++;
+                combo++;
+                if(combo > maxCombo) maxCombo = combo;
+                
+                score += 100 + (combo * 10);
+                document.getElementById('score-val').innerText = score + " 点";
+                document.getElementById('combo-val').innerText = combo + " Combo";
+            } else {
+                selectedBtn.classList.add('wrong-flash');
+                expTitle.innerHTML = `❌ 不正解... 次でリベンジ！`;
+                expTitle.style.color = '#dc2626';
+                
+                combo = 0;
+                document.getElementById('combo-val').innerText = "0 Combo";
+                
+                allButtons.forEach(b => {
+                    const targetText = isQuestionMixedType ? currentQuestion.sym : currentQuestion.name;
+                    if(b.innerText === targetText) {
+                        b.classList.add('correct-flash');
+                    }
+                });
+            }
+
+            // ローカルストレージへの累積統計データの即時反映
+            saveIncrementalStats(isCorrect);
+
+            setTimeout(() => {
+                if(timeLeft > 0) {
+                    expPanel.classList.remove('active');
+                    nextQuestion();
+                }
+            }, 1800); // 解説を読む時間を少し確保
+        }
+
+        // --- ゲーム終了・リザルト＆ランキング同期 ---
+        async function endGame() {
+            clearInterval(timerInterval);
+            
+            // オンラインデータベース送信
+            await uploadScoreToFirebase(score);
+            
+            // ランキング表示画面のターゲットを現在遊んだジャンルに設定
+            rankingViewGenre = currentGenre;
+            rankingViewPeriod = 'daily';
+            
+            // 戻るボタンの挙動をリザルト用にマイルド化
+            document.getElementById('ranking-back-btn').style.display = 'none';
+            document.getElementById('ranking-retry-btn').innerText = 'もう一度遊ぶ・戻る 🔄';
+            
+            changeScreen('screen-ranking');
+            renderRankingMatrixUI();
+            loadGlobalRankingFromFirebase();
+        }
+
+        // --- 2軸ランキングマトリクス UI制御 ---
+        function setRankingPeriod(period) {
+            rankingViewPeriod = period;
+            renderRankingMatrixUI();
+            loadGlobalRankingFromFirebase();
+        }
+
+        function setRankingGenre(genre) {
+            rankingViewGenre = genre;
+            renderRankingMatrixUI();
+            loadGlobalRankingFromFirebase();
+        }
+
+        function renderRankingMatrixUI() {
+            // 期間タブのアクティブ初期化
+            document.getElementById('p-tab-daily').classList.remove('active');
+            document.getElementById('p-tab-weekly').classList.remove('active');
+            document.getElementById('p-tab-monthly').classList.remove('active');
+            document.getElementById(`p-tab-${rankingViewPeriod}`).classList.add('active');
+
+            // ジャンルタブのアクティブ初期化
+            document.getElementById('g-tab-element').classList.remove('active');
+            document.getElementById('g-tab-formula').classList.remove('active');
+            document.getElementById('g-tab-ion').classList.remove('active');
+            document.getElementById(`g-tab-${rankingViewGenre}`).classList.add('active');
+        }
+
+        // --- Firebase オンラインデータ通信ロジック ---
+        function getJSTIdentifiers() {
+            const now = new Date();
+            const jstOffset = 9 * 60 * 60 * 1000;
+            const jstTime = new Date(now.getTime() + (now.getTimezoneOffset() * 60 * 1000) + jstOffset);
+            
+            const yyyy = jstTime.getFullYear();
+            const mm = String(jstTime.getMonth() + 1).padStart(2, '0');
+            const dd = String(jstTime.getDate()).padStart(2, '0');
+            
+            const dailyId = `${yyyy}-${mm}-${dd}`;
+            const monthlyId = `${yyyy}-${mm}`;
+            
+            const day = jstTime.getDay();
+            const diffToMonday = jstTime.getDate() - day + (day === 0 ? -6 : 1);
+            const monday = new Date(jstTime.setDate(diffToMonday));
+            const mY = monday.getFullYear();
+            const mM = String(monday.getMonth() + 1).padStart(2, '0');
+            const mD = String(monday.getDate()).padStart(2, '0');
+            const weeklyId = `${mY}-W${mM}-${mD}`;
+            
+            return { daily: dailyId, weekly: weeklyId, monthly: monthlyId };
+        }
+
+        async function uploadScoreToFirebase(finalScore) {
+            const ids = getJSTIdentifiers();
+            const uId = getOrCreateUserId();
+            const uName = getSavedUserName();
+            
+            // ローカルハイスコアの更新
+            const localScores = JSON.parse(localStorage.getItem('quiz_high_scores')) || { daily: {}, weekly: {}, monthly: {} };
+            if (!localScores.daily) localScores.daily = {};
+            if (!localScores.weekly) localScores.weekly = {};
+            if (!localScores.monthly) localScores.monthly = {};
+            
+            if (finalScore > (localScores.daily[ids.daily] || 0)) localScores.daily[ids.daily] = finalScore;
+            if (finalScore > (localScores.weekly[ids.weekly] || 0)) localScores.weekly[ids.weekly] = finalScore;
+            if (finalScore > (localScores.monthly[ids.monthly] || 0)) localScores.monthly[ids.monthly] = finalScore;
+            localStorage.setItem('quiz_high_scores', JSON.stringify(localScores));
+
+            // Firebaseへジャンル別・期間別に細分化して送信
+            try {
+                const packet = { name: uName, score: finalScore, timestamp: Date.now() };
+                
+                // パス構造: rankings / ジャンル / 期間種別 / 期間ID / ユーザーID
+                const dailyRef = database.ref(`rankings/${currentGenre}/daily/${ids.daily}/${uId}`);
+                const weeklyRef = database.ref(`rankings/${currentGenre}/weekly/${ids.weekly}/${uId}`);
+                const monthlyRef = database.ref(`rankings/${currentGenre}/monthly/${ids.monthly}/${uId}`);
+                
+                dailyRef.once('value').then(snap => { if(!snap.exists() || finalScore > snap.val().score) dailyRef.set(packet); });
+                weeklyRef.once('value').then(snap => { if(!snap.exists() || finalScore > snap.val().score) weeklyRef.set(packet); });
+                monthlyRef.once('value').then(snap => { if(!snap.exists() || finalScore > snap.val().score) monthlyRef.set(packet); });
+            } catch (e) {
+                console.error("Firebaseへの送信に失敗しました（オフライン動作中）", e);
+            }
+        }
+
+        async function loadGlobalRankingFromFirebase() {
+            const container = document.getElementById('global-ranking-list');
+            container.innerHTML = '<div style="text-align:center; color:#64748b; padding:30px; font-weight:bold;">🌐 クラウドデータを同期中...</div>';
+            
+            const ids = getJSTIdentifiers();
+            const targetPeriodId = ids[rankingViewPeriod];
+            
+            try {
+                const path = `rankings/${rankingViewGenre}/${rankingViewPeriod}/${targetPeriodId}`;
+                const snapshot = await database.ref(path).once('value');
+                
+                container.innerHTML = '';
+                
+                if(!snapshot.exists()) {
+                    container.innerHTML = '<div style="text-align:center; color:#64748b; padding:30px;">この条件のランキングデータはまだありません。最初のランクインを目指そう！</div>';
+                    return;
+                }
+                
+                const rawData = snapshot.val();
+                const rankingList = Object.keys(rawData).map(key => rawData[key]);
+                
+                // スコア順（同点ならタイムスタンプが古い＝先に達成した順）にソート
+                rankingList.sort((a, b) => {
+                    if(b.score !== a.score) return b.score - a.score;
+                    return a.timestamp - b.timestamp;
+                });
+
+                // Top 10を切り出して描写
+                const topTen = rankingList.slice(0, 10);
+                topTen.forEach((player, idx) => {
+                    const item = document.createElement('div');
+                    item.className = 'ranking-item';
+                    
+                    let rankClass = 'rank-other';
+                    if(idx === 0) rankClass = 'rank-1';
+                    else if(idx === 1) rankClass = 'rank-2';
+                    else if(idx === 2) rankClass = 'rank-3';
+                    
+                    const rankLabel = idx < 3 ? `👑 ${idx+1}` : `${idx+1}位`;
+
+                    item.innerHTML = `
+                        <span class="rank ${rankClass}">${rankLabel}</span>
+                        <span class="name">${escapeHTML(player.name)}</span>
+                        <span class="score">${player.score} 点</span>
+                    `;
+                    container.appendChild(item);
+                });
+            } catch(e) {
+                console.error("ランキングデータ同期エラー:", e);
+                container.innerHTML = '<div style="text-align:center; color:#ef4444; padding:30px;">データの読み込みに失敗しました。</div>';
+            }
+        }
+
+        // --- ローカルストレージ統計・ダッシュボード処理 ---
+        function getOrCreateUserId() {
+            let id = localStorage.getItem('quiz_user_id');
+            if (!id) {
+                id = 'scientist_' + Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
+                localStorage.setItem('quiz_user_id', id);
+            }
+            return id;
+        }
+
+        function getSavedUserName() {
+            return localStorage.getItem('quiz_user_name') || '未登録の研究者';
+        }
+
+        function saveIncrementalStats(isCorrect) {
+            const stats = JSON.parse(localStorage.getItem('quiz_total_stats')) || { totalAnswers: 0, totalCorrect: 0 };
+            stats.totalAnswers += 1;
+            if(isCorrect) stats.totalCorrect += 1;
+            localStorage.setItem('quiz_total_stats', JSON.stringify(stats));
+        }
+
+        function calculateUserStatsAndBadge() {
+            const stats = JSON.parse(localStorage.getItem('quiz_total_stats')) || { totalAnswers: 0, totalCorrect: 0 };
+            const uName = getSavedUserName();
+            
+            document.getElementById('top-username').innerText = uName;
+            
+            // 称号（アチーブメント）アルゴリズム
+            let badge = "元素の見習い 🥚";
+            const count = stats.totalAnswers;
+            const acc = count > 0 ? (stats.totalCorrect / count) * 100 : 0;
+
+            if (count >= 150 && acc >= 90) badge = "物質界の神 🌌";
+            else if (count >= 80 && acc >= 85) badge = "首席研究員 🔬";
+            else if (count >= 40) badge = "実験室の助手 🧪";
+            else if (count >= 15) badge = "熱心な学生 ✍️";
+
+            document.getElementById('top-userbadge').innerText = badge;
+        }
+
+        function openProfile() {
+            const uName = getSavedUserName();
+            document.getElementById('input-username').value = uName === '未登録の研究者' ? '' : uName;
+            
+            // ダッシュボードスタッツの描画
+            const stats = JSON.parse(localStorage.getItem('quiz_total_stats')) || { totalAnswers: 0, totalCorrect: 0 };
+            const acc = stats.totalAnswers > 0 ? Math.round((stats.totalCorrect / stats.totalAnswers) * 100) : 0;
+            
+            document.getElementById('dash-total').innerText = stats.totalAnswers + " 問";
+            document.getElementById('dash-accuracy').innerText = acc + " %";
+
+            // 自己ベストの描画
+            const ids = getJSTIdentifiers();
+            const localScores = JSON.parse(localStorage.getItem('quiz_high_scores')) || { daily: {}, weekly: {}, monthly: {} };
+            
+            document.getElementById('local-score-daily').innerText = ((localScores.daily && localScores.daily[ids.daily]) || 0) + " 点";
+            document.getElementById('local-score-weekly').innerText = ((localScores.weekly && localScores.weekly[ids.weekly]) || 0) + " 点";
+            document.getElementById('local-score-monthly').innerText = ((localScores.monthly && localScores.monthly[ids.monthly]) || 0) + " 点";
+
+            changeScreen('screen-profile');
+        }
+
+        function saveProfile() {
+            const nameInput = document.getElementById('input-username').value.trim();
+            if(!nameInput) {
+                alert('研究者コードネームを入力してください（空欄不可）。');
+                return;
+            }
+            localStorage.setItem('quiz_user_name', nameInput);
+            alert('ラボデータを正常に同期・保存しました！');
+            changeScreen('screen-genre');
+        }
+
+        // --- セキュリティ対策エスケープ ---
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+            }[tag] || tag));
+        }
+
+        // ページロード時初期化
+        window.onload = function() {
+            getOrCreateUserId();
+            calculateUserStatsAndBadge();
+        };
+    </script>
+</body>
+</html>
